@@ -16,12 +16,27 @@ struct CameraView: View {
     @StateObject private var viewModel = CameraViewModel()
     
     var body: some View {
-        
-        CameraPreview(session: viewModel.cameraManager.session)
-            .ignoresSafeArea()
-            .task {
-                viewModel.startCamera()
+        ZStack {
+            CameraPreview(session: viewModel.cameraManager.session)
+                .ignoresSafeArea()
+            VStack {
+                Spacer()
+                if let result = viewModel.detectionResult {
+                    Group {
+                        Text(result.identifier)
+                            .font(.title2)
+                            .bold()
+                        Text("\(Int(result.confidence * 100))%")
+                            .font(.caption)
+                    }
+                    .shadow(color: .black.opacity(0.3), radius: 4)
+                }
             }
+            .padding(.bottom, 50)
+        }
+        .task {
+            viewModel.startCamera()
+        }
     }
 }
 

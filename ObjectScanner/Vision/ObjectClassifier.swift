@@ -26,7 +26,7 @@ final class ObjectClassifier {
     
     func detect(
         in pixelBuffer: CVPixelBuffer,
-        completion: @escaping (String?) -> Void
+        completion: @escaping (ClassifierResult?) -> Void
     ) {
         let request = VNCoreMLRequest(model: visionModel) { request, error in
             
@@ -38,7 +38,12 @@ final class ObjectClassifier {
                 return
             }
             
-            completion(first.identifier)
+            guard first.confidence > 0.5 else {
+                completion(nil)
+                return
+            }
+            
+            completion(ClassifierResult(identifier: first.identifier, confidence: first.confidence))
         }
         
         let handler = VNImageRequestHandler(
