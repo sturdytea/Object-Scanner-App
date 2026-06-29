@@ -22,6 +22,9 @@ final class CameraViewModel: ObservableObject {
     }
     
     func startCamera() {
+        cameraManager.onFrameCaptured = { pixelBuffer in
+            print(pixelBuffer)
+        }
         cameraManager.configure()
         cameraManager.start()
     }

@@ -12,9 +12,11 @@
 import Foundation
 import AVFoundation
 
-final class CameraManager: NSObject {
+final class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     
     let session = AVCaptureSession()
+    private let videoOutput = AVCaptureVideoDataOutput()
+    var onFrameCaptured: ((CVPixelBuffer) -> Void)?
     
     func configure() {
         session.beginConfiguration()
@@ -36,6 +38,14 @@ final class CameraManager: NSObject {
         }
         
         session.commitConfiguration()
+        
+        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "camera.frame.processing"))
+        
+        if session.canAddOutput(videoOutput) {
+            session.addOutput(videoOutput)
+        }
     }
     
     func start() {
@@ -46,6 +56,16 @@ final class CameraManager: NSObject {
     
     func stop() {
         session.stopRunning()
+    }
+    
+    /// Processes each captured camera frame.
+    ///
+    /// The method is invoked approximately 30–60 times per second while the camera
+    /// session is running. Each frame is converted to a `CVPixelBuffer` and passed
+    /// to the Vision pipeline for object recognition.
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        onFrameCaptured?(pixelBuffer)
     }
 }
 
