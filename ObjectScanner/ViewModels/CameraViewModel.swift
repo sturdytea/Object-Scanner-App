@@ -9,4 +9,21 @@
 //
     
 
+import Combine
 import Foundation
+
+@MainActor
+final class CameraViewModel: ObservableObject {
+    
+    let cameraManager: CameraManager
+    
+    init() {
+        self.cameraManager = CameraManager()
+    }
+    
+    func startCamera() {
+        cameraManager.configure()
+        cameraManager.start()
+    }
+}
+
