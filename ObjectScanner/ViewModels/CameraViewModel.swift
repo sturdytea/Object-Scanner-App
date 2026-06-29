@@ -16,14 +16,18 @@ import Foundation
 final class CameraViewModel: ObservableObject {
     
     let cameraManager: CameraManager
+    private let classifier: ObjectClassifier
     
     init() {
         self.cameraManager = CameraManager()
+        self.classifier = ObjectClassifier()
     }
     
     func startCamera() {
-        cameraManager.onFrameCaptured = { pixelBuffer in
-            print(pixelBuffer)
+        cameraManager.onFrameCaptured = { [weak self] pixelBuffer in
+            self?.classifier.detect(in: pixelBuffer) { object in
+                print(object ?? "Nothing")
+            }
         }
         cameraManager.configure()
         cameraManager.start()
